@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useRouter } from 'next/navigation';
 import { useAuthStore } from '../store/authStore';
+import { initializeSocket } from '../utils/socketManager';
 
 interface LoginProps {
   onSwitchToRegister: () => void;
 }
 
 const Login: React.FC<LoginProps> = ({ onSwitchToRegister }) => {
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -31,8 +34,13 @@ const Login: React.FC<LoginProps> = ({ onSwitchToRegister }) => {
           username: response.data.username,
           email: response.data.email,
         });
-        // Armazenar o token JWT no localStorage
+        
         localStorage.setItem('token', response.data.token);
+        
+        initializeSocket(response.data.token);
+        
+        // Redirecionar para a página de chat
+        router.push('/chat');
       }
     } catch (err) {
       if (axios.isAxiosError(err) && err.response) {
