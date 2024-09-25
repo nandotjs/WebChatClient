@@ -1,19 +1,22 @@
-import './globals.css'
-import type { Metadata } from 'next'
+import React from 'react';
+import { Inter } from 'next/font/google';
+import './globals.css';
 
-export const metadata: Metadata = {
-  title: 'Meu App',
-  description: 'Descrição do meu app',
-}
+const inter = Inter({ subsets: ['latin'] });
+
+export const metadata = {
+  title: 'Chat Online',
+  description: 'Um chat online com autenticação',
+};
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
     <html lang="pt-BR">
-      <body>{children}</body>
+      <body className={inter.className}>{children}</body>
     </html>
-  )
+  );
 }
