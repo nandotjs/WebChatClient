@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import axios from 'axios';
+import { useAuthStore } from '../store/authStore';
 
 interface LoginProps {
   onSwitchToRegister: () => void;
@@ -7,16 +9,44 @@ interface LoginProps {
 const Login: React.FC<LoginProps> = ({ onSwitchToRegister }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const setIsAuthenticated = useAuthStore((state) => state.setIsAuthenticated);
+  const setUser = useAuthStore((state) => state.setUser);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement login logic
-    console.log('Login:', { email, password });
+    setError('');
+
+    try {
+      const response = await axios.post('http://localhost:3000/api/auth/login', {
+        email,
+        password
+      });
+
+      if (response.status === 200 && response.data) {
+        console.log('Login bem-sucedido');
+        setIsAuthenticated(true);
+        setUser({
+          _id: response.data._id,
+          username: response.data.username,
+          email: response.data.email,
+        });
+        // Armazenar o token JWT no localStorage
+        localStorage.setItem('token', response.data.token);
+      }
+    } catch (err) {
+      if (axios.isAxiosError(err) && err.response) {
+        setError(err.response.data.message || 'Erro ao fazer login. Tente novamente.');
+      } else {
+        setError('Erro ao conectar com o servidor. Tente novamente mais tarde.');
+      }
+    }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <h2 className="text-2xl font-bold mb-4">Login</h2>
+      {error && <p className="text-red-500">{error}</p>}
       <div>
         <label htmlFor="email" className="block mb-1">Email</label>
         <input
@@ -29,7 +59,7 @@ const Login: React.FC<LoginProps> = ({ onSwitchToRegister }) => {
         />
       </div>
       <div>
-        <label htmlFor="password" className="block mb-1">Password</label>
+        <label htmlFor="password" className="block mb-1">Senha</label>
         <input
           type="password"
           id="password"
@@ -40,12 +70,12 @@ const Login: React.FC<LoginProps> = ({ onSwitchToRegister }) => {
         />
       </div>
       <button type="submit" className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">
-        Login
+        Entrar
       </button>
       <p className="text-center">
-        Don't have an account?{' '}
+        Não tem uma conta?{' '}
         <button type="button" onClick={onSwitchToRegister} className="text-blue-500 hover:underline">
-          Register
+          Cadastre-se
         </button>
       </p>
     </form>
