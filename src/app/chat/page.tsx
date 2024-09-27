@@ -3,7 +3,7 @@
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '../../store/authStore';
-import Chat from '../../components/Chat';
+import ChatContainer from '../../components/Chat/ChatContainer';
 
 const ChatPage: React.FC = () => {
   const router = useRouter();
@@ -19,7 +19,7 @@ const ChatPage: React.FC = () => {
     return null; 
   }
 
-  return <Chat />;
+  return <ChatContainer />;
 };
 
 export default ChatPage;
