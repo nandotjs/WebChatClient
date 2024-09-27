@@ -3,6 +3,7 @@ import { getSocket } from '../../utils/socketManager';
 import ChatHeader from './ChatHeader';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
+import { useAuthStore } from '../../store/authStore';
 
 interface Message {
   _id: string;
@@ -16,10 +17,18 @@ const isDev = process.env.NODE_ENV === 'development';
 function ChatContainer() {
   const [messages, setMessages] = useState<Message[]>([]);
   const socket = getSocket();
+  const currentUser = useAuthStore((state) => state.user);
 
   const handleNewMessage = useCallback((message: Message) => {
     if (isDev) console.log('Received new message:', message);
-    setMessages(prevMessages => [...prevMessages, message]);
+    setMessages(prevMessages => {
+      // Verifica se a mensagem já existe (para evitar duplicatas)
+      const messageExists = prevMessages.some(m => m._id === message._id);
+      if (!messageExists) {
+        return [...prevMessages, message];
+      }
+      return prevMessages;
+    });
   }, []);
 
   const handlePreviousMessages = useCallback((previousMessages: Message[]) => {
@@ -49,18 +58,20 @@ function ChatContainer() {
   }, [socket, handleNewMessage, handlePreviousMessages]);
 
   const sendMessage = useCallback((text: string) => {
-    if (socket) {
+    if (socket && currentUser) {
       if (isDev) console.log('Sending message:', text);
       socket.emit('sendMessage', text);
+      // Request previous messages again to ensure the latest messages are loaded
+      socket.emit('requestPreviousMessages');
     } else {
-      console.error('Socket not connected');
+      console.error('Socket not connected or user not authenticated');
     }
-  }, [socket]);
+  }, [socket, currentUser]);
 
   return (
     <div className="flex flex-col h-screen">
       <ChatHeader />
-      <MessageList messages={messages} />
+      <MessageList messages={messages} currentUser={currentUser} />
       <MessageInput onSendMessage={sendMessage} />
     </div>
   );
